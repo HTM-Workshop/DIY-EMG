@@ -1,0 +1,9 @@
+[submodule "demo_programs/pong"]
+	path = demo_programs/pong
+	url = https://github.com/BB121-LAB/emg_pong
+[submodule "demo_programs/FlapPyBird"]
+	path = demo_programs/FlapPyBird
+	url = https://github.com/BB121-LAB/FlapPyBird
+[submodule "arduino_connect"]
+	path = arduino_connect
+	url = https://github.com/BB121-LAB/arduino_connect
