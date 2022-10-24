@@ -75,14 +75,47 @@ inline void __attribute__((optimize("O3"))) update_output(const int level) {
 
 void setup(void) {
     Serial.begin(115200);
-
+    String mode;
+    BYTE channel_select = 0;
+    
     // indicator
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-   
-    // setup analog input A0 for operation
+
+    // run until we get a valid input mode string from the computer
+    while(true) {
+    
+        // Wait for input from the capture program to determine which 
+        while(!Serial.available()) {
+            mode = Serial.readString();     // using C++ strings for input
+            mode.trim();
+        }
+    
+        // use input from serial to select ADC channel
+        if(mode == "NORMAL") {
+            channel_select = 0;
+            break;
+        } 
+        else if (mode == "WAVE") {
+            channel_select = 1;
+            break;
+        } else {
+            
+            // input mode string was invalid, send error message to program,
+            // clear buffers, and try again
+            Serial.println("INVALID");
+            while(!Serial.available()) {
+                Serial.read();
+            }
+            continue;
+        }
+    }
+
+    // setup analog input A0 or A1 for operation
     // optimized for high-performance
-    ADMUX = (1 << REFS0);
+    // channel_select determines which ADC channel is active
+    // 0 = A0, 1 = A1
+    ADMUX = (1 << REFS0) | channel_select;
     ADCSRA = 0x82;
 }
 
