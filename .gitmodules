@@ -7,3 +7,4 @@
 [submodule "arduino_connect"]
 	path = arduino_connect
 	url = https://github.com/BB121-LAB/arduino_connect
+	branch = graph_option

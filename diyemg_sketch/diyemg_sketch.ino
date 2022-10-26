@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define TRIGGER_LOW 150             // Low limit for trigger, adjust to change false-trigger rejection
 #define TRIGGER_WAIT_TIME_MS 50     // Delay between triggers, lower to increase speed of triggering
 typedef unsigned char BYTE;
-
+BYTE channel_select = 0;
 
 // Read analog input value and store in *level
 // optimized for high-performance
@@ -76,40 +76,48 @@ inline void __attribute__((optimize("O3"))) update_output(const int level) {
 void setup(void) {
     Serial.begin(115200);
     String mode;
-    BYTE channel_select = 0;
     
     // indicator
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
     // run until we get a valid input mode string from the computer
-    while(true) {
+    while(1) {
     
         // Wait for input from the capture program to determine which 
-        while(!Serial.available()) {
+        while(Serial.available() == 0) {}
+        if(Serial.available()) {
             mode = Serial.readString();     // using C++ strings for input
             mode.trim();
+        } else {
+            continue;
         }
-    
+
         // use input from serial to select ADC channel
         if(mode == "NORMAL") {
             channel_select = 0;
             break;
         } 
-        else if (mode == "WAVE") {
+        else if(mode == "WAVE") {
             channel_select = 1;
             break;
         } else {
             
             // input mode string was invalid, send error message to program,
             // clear buffers, and try again
-            Serial.println("INVALID");
+            Serial.print("INVALID \"");
+            Serial.print(mode);
+            Serial.println("\"");
+            Serial.flush();
             while(!Serial.available()) {
                 Serial.read();
             }
             continue;
         }
-    }
+    } 
+
+    Serial.println("READY");
+    Serial.flush();
 
     // setup analog input A0 or A1 for operation
     // optimized for high-performance
@@ -123,6 +131,18 @@ void setup(void) {
 // optimized for high-performance
 void __attribute__((optimize("O3"), flatten)) loop(void) {
     int analog_level;
-    update_reading(&analog_level);
-    update_output(analog_level);
+    char output_buffer[6];
+    while(channel_select == 0) {
+        update_reading(&analog_level);
+        update_output(analog_level);
+    }
+    while(channel_select == 1) {
+        while(Serial.available() == 0) {}
+        while(Serial.available() > 0) {
+            Serial.read();
+        }
+        update_reading(&analog_level);
+        sprintf(output_buffer, "$%03d\n", analog_level);
+        Serial.print(output_buffer);
+    }
 }
