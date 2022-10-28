@@ -76,6 +76,7 @@ inline void __attribute__((optimize("O3"))) update_output(const int level) {
 void setup(void) {
     Serial.begin(115200);
     String mode;
+    char buff[10];
     
     // indicator
     pinMode(LED_BUILTIN, OUTPUT);
@@ -83,22 +84,43 @@ void setup(void) {
 
     // run until we get a valid input mode string from the computer
     while(1) {
-    
-        // Wait for input from the capture program to determine which 
-        while(Serial.available() == 0) {}
-        if(Serial.available()) {
-            mode = Serial.readString();     // using C++ strings for input
-            mode.trim();
-        } else {
-            continue;
+//    
+//        // Wait for input from the capture program to determine which 
+//        while(Serial.available() == 0) {}
+//        if(Serial.available()) {
+//            mode = Serial.readString();     // using C++ strings for input
+//            mode.trim();
+//        } else {
+//            continue;
+//        }
+        BYTE idx = 0;
+        BYTE do_read = 1;
+        while(do_read != 0) {
+            Serial.flush();
+            if(Serial.available() == 0)
+                continue;
+            char c = Serial.read();
+            if(c != '$')
+                continue;
+            delay(1000);
+            while(Serial.available() != 0) {
+                c = Serial.read();
+                if(c == '\n' or c == '\r') {
+                    do_read = 0;
+                    buff[idx] = 0;
+                    break;
+                }
+                buff[idx] = c;
+                idx++;
+            }
         }
 
         // use input from serial to select ADC channel
-        if(mode == "NORMAL") {
+        if(strcmp(buff, "NORMAL") == 0) {
             channel_select = 0;
             break;
         } 
-        else if(mode == "WAVE") {
+        else if(strcmp(buff, "WAVE") == 0) {
             channel_select = 1;
             break;
         } else {
@@ -106,16 +128,15 @@ void setup(void) {
             // input mode string was invalid, send error message to program,
             // clear buffers, and try again
             Serial.print("INVALID \"");
-            Serial.print(mode);
+            Serial.print(buff);
             Serial.println("\"");
             Serial.flush();
-            while(!Serial.available()) {
-                Serial.read();
-            }
             continue;
         }
     } 
-
+    while(Serial.available() > 0) {
+        Serial.read();
+    }
     Serial.println("READY");
     Serial.flush();
 
