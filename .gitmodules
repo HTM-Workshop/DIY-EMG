@@ -7,4 +7,6 @@
 [submodule "arduino_connect"]
 	path = arduino_connect
 	url = https://github.com/BB121-LAB/arduino_connect
-	branch = graph_option
+	branch = aio_port_filter_patch
+[submodule "arduino_connect/"]
+	branch = aio_port_filter_patch
