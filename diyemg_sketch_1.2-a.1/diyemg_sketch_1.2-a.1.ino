@@ -1,4 +1,4 @@
-/* DIY Spiker unit controller - v1.0
+/* DIY Spiker unit controller - v1.2
    Written by Kevin Williams
     10/26/2020:
     - Complete rewrite to match new hardware specifications
@@ -72,11 +72,20 @@ inline void __attribute__((optimize("O3"))) update_output(const int level) {
     return;
 }
 
+ISR(TIMER1_OVF_vect) {
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+}
 
 void setup(void) {
     Serial.begin(115200);
     String mode;
     char buff[10];
+
+    // standby signal
+    TCCR1A = 0;
+    TCCR1B = 0x3; 
+    TCNT1 = 0;
+    TIMSK1 = _BV(TOIE1);    // enable TIMER2 overflow interrupt
     
     // indicator
     pinMode(LED_BUILTIN, OUTPUT);
@@ -146,6 +155,10 @@ void setup(void) {
     // 0 = A0, 1 = A1
     ADMUX = (1 << REFS0) | channel_select;
     ADCSRA = 0x82;
+
+    // disable status led
+    TIMSK1 = 0;
+    digitalWrite(LED_BUILTIN, 0);
 }
 
 
