@@ -1,1 +1,2 @@
-package_builds/
+package_builds
+*.log
